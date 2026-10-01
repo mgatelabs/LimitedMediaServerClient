@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "lms-client"
+version = "0.1.0"
+description = "Python client library for the Limited Media Server API"
+readme = "README.md"
+license = { file = "LICENSE" }
+requires-python = ">=3.11"
+dependencies = ["requests>=2.31"]
+keywords = ["media-server", "manga", "webtoon", "api-client"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Multimedia",
+]
+
+[project.urls]
+Homepage = "https://github.com/mgatelabs/LimitedMediaServerClient"
+"Bug Tracker" = "https://github.com/mgatelabs/LimitedMediaServerClient/issues"
+Changelog = "https://github.com/mgatelabs/LimitedMediaServerClient/blob/main/CHANGELOG.md"
+
+[tool.setuptools.packages.find]
+where = ["src"]
