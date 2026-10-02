@@ -3,7 +3,7 @@
 from collections import deque
 from mediaserver import MediaServerClient
 
-def crawl_media():
+def archive_media():
     client = MediaServerClient()
     client.login()
 
@@ -21,16 +21,17 @@ def crawl_media():
 
         for f in result.get("files", []):
             if not f.get("archive"):
+                client.media.migrate_file(file_id=f["id"], force_archive=True)
                 unarchived.append({
                     "folder": folder_name,
                     "id":     f["id"],
                     "name":   f.get("filename", ""),
                 })
 
-    print(f"Found {len(unarchived)} unarchived files:\n")
+    print(f"Archived {len(unarchived)} files:\n")
     for f in unarchived:
         print(f"  [{f['folder']}]  {f['id']}  {f['name']}")
 
 
 if __name__ == '__main__':
-    crawl_media()
+    archive_media()

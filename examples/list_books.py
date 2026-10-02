@@ -9,7 +9,7 @@ offset = 0
 limit = 100
 
 while True:
-    result = client.books.list_books(offset=offset, limit=limit, sorting="AZ")
+    result = client.books.list_books(offset=offset, limit=limit, sorting="AZ", rating_limit=200)
     books = result.get("books", [])
 
     for book in books:
