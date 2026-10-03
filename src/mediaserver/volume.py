@@ -1,8 +1,10 @@
 """Volume sub-client: books, chapters, images, tag management, updates."""
 
 import base64
+import uuid
+from pathlib import Path
 
-from mediaserver._http import HttpLayer, detect_image_mime
+from mediaserver._http import HttpLayer, detect_image_mime, ext_from_mime
 
 
 class VolumeClient:
@@ -47,6 +49,22 @@ class VolumeClient:
             "image_base64": base64.b64encode(resp.content).decode("ascii"),
             "mime_type":    mime,
         }
+
+    def download_image(self, book_id: str, chapter_id: str, filename: str,
+                       scratch_dir: Path) -> dict:
+        """Stream a chapter image to scratch_dir as <uuid>.<ext>.
+        The source filename may be randomized, so the local name is a fresh UUID.
+        Extension comes from magic bytes, then source filename (png/webp/jpg).
+        Returns: {"local_path", "mime_type", "size_bytes"}"""
+        resp = self._http.get(f"/api/volume/serve_image/{book_id}/{chapter_id}/{filename}")
+        data = resp.content
+        mime = detect_image_mime(data, resp.headers.get("Content-Type", ""), filename)
+        ext = ext_from_mime(mime)
+        scratch_dir.mkdir(parents=True, exist_ok=True)
+        target = scratch_dir / f"{uuid.uuid4().hex}{ext}"
+        target.write_bytes(data)
+        return {"local_path": str(target), "mime_type": mime,
+                "size_bytes": target.stat().st_size}
 
     def list_tags(self) -> dict:
         """All tags in use across books."""

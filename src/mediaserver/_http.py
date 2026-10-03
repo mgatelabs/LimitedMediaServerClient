@@ -8,6 +8,16 @@ from mediaserver._config import ServerConfig
 from mediaserver._session import SessionStore
 
 
+_EXT_FIXES = {".jpe": ".jpg", ".jpeg": ".jpg"}
+_EXT_FALLBACKS = {"image/webp": ".webp"}  # guess_extension misses this on some builds
+
+
+def ext_from_mime(mime_type: str) -> str:
+    """File extension (with dot) for a MIME type, e.g. "image/webp" -> ".webp"."""
+    ext = mimetypes.guess_extension(mime_type) or ""
+    return _EXT_FIXES.get(ext, ext) or _EXT_FALLBACKS.get(mime_type, "")
+
+
 def detect_image_mime(data: bytes, content_type: str = "", filename: str = "") -> str:
     """Determine image MIME type: magic bytes → header → filename extension → JPEG fallback."""
     if data[:4] == b"\x89PNG":

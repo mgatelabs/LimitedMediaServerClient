@@ -121,6 +121,7 @@ client.books.get_book(book_id)
 client.books.list_chapters(book_id)
 client.books.list_images(book_id, chapter_id)
 client.books.get_image(book_id, chapter_id, filename)  # returns base64 image data
+client.books.download_image(book_id, chapter_id, filename, Path("/tmp"))  # streams to local path
 client.books.list_tags()
 client.books.update_style(book_id, "scroll")           # "page" | "scroll"
 client.books.update_tags(book_id, ["tag1", "tag2"])

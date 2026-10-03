@@ -4,7 +4,7 @@ import base64
 import mimetypes
 from pathlib import Path
 
-from mediaserver._http import HttpLayer, detect_image_mime
+from mediaserver._http import HttpLayer, detect_image_mime, ext_from_mime
 
 
 class MediaClient:
@@ -69,14 +69,14 @@ class MediaClient:
         Returns: {"file_id", "local_path", "mime_type", "size_bytes"}"""
         meta = self.get_file(file_id)
         mime = meta.get("mime_type") or ""
-        target = scratch_dir / f"{file_id}{_ext_from_mime(mime)}"
+        target = scratch_dir / f"{file_id}{ext_from_mime(mime)}"
         if target.exists():
             return {"file_id": file_id, "local_path": str(target),
                     "mime_type": mime, "size_bytes": target.stat().st_size}
         resp = self._http.get("/api/media/view", params={"file_id": file_id}, stream=True)
         ctype = resp.headers.get("Content-Type", "").split(";")[0].strip()
         if ctype and ctype != "application/octet-stream":
-            target = scratch_dir / f"{file_id}{_ext_from_mime(ctype)}"
+            target = scratch_dir / f"{file_id}{ext_from_mime(ctype)}"
             if not target.exists():
                 mime = ctype
         with open(target, "wb") as f:
@@ -172,14 +172,6 @@ class MediaClient:
 
 # ── helpers ───────────────────────────────────────────────────────────────────
 
-_JPEG_FIXES = {".jpe": ".jpg", ".jpeg": ".jpg"}
-
-
-def _ext_from_mime(mime_type: str) -> str:
-    ext = mimetypes.guess_extension(mime_type) or ""
-    return _JPEG_FIXES.get(ext, ext)
-
-
 def _open_upload(local_path: str, mime_type: str):
     """Return (filename, file_handle, content_type) for a requests upload."""
     path = Path(local_path)
@@ -188,8 +180,7 @@ def _open_upload(local_path: str, mime_type: str):
     fname = path.name
     ctype = mime_type or mimetypes.guess_type(fname)[0] or "application/octet-stream"
     if "." not in fname and ctype != "application/octet-stream":
-        ext = mimetypes.guess_extension(ctype) or ""
-        ext = _JPEG_FIXES.get(ext, ext)
+        ext = ext_from_mime(ctype)
         if ext:
             fname = fname + ext
     return fname, open(path, "rb"), ctype
