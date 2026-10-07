@@ -5,6 +5,12 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.3] - 2026-10-06
+
+### Added
+- `client.books.download_chapter(book_id, chapter_id, scratch_dir)` — streams the chapter zip archive to the local scratch directory as a UUID-named `.zip` file, returning `{"local_path", "size_bytes"}`
+- `client.books.upload_chapter(book_id, chapter_id, zip_path)` — uploads a chapter from an existing local zip archive of images (multipart POST with `book_id`, `chapter_id`, and `file`). Validates the local file is a zip by inspecting its magic bytes and raises `ValueError` otherwise
+
 ## [0.1.2] - 2026-10-02
 
 ### Added

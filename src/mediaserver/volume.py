@@ -1,6 +1,7 @@
 """Volume sub-client: books, chapters, images, tag management, updates."""
 
 import base64
+import mimetypes
 import uuid
 from pathlib import Path
 
@@ -65,6 +66,36 @@ class VolumeClient:
         target.write_bytes(data)
         return {"local_path": str(target), "mime_type": mime,
                 "size_bytes": target.stat().st_size}
+
+    def download_chapter(self, book_id: str, chapter_id: str,
+                         scratch_dir: Path) -> dict:
+        """Stream the chapter zip archive to scratch_dir as <uuid>.zip.
+        Returns: {"local_path", "size_bytes"}"""
+        resp = self._http.get(f"/api/volume/download/chapter/{book_id}/{chapter_id}", stream=True)
+        scratch_dir.mkdir(parents=True, exist_ok=True)
+        target = scratch_dir / f"{uuid.uuid4().hex}.zip"
+        with open(target, "wb") as f:
+            for chunk in resp.iter_content(chunk_size=65536):
+                if chunk:
+                    f.write(chunk)
+        return {"local_path": str(target), "size_bytes": target.stat().st_size}
+
+    def upload_chapter(self, book_id: str, chapter_id: str, zip_path: str) -> dict:
+        """Upload a chapter from a local zip archive of images (inverse of
+        download_chapter). zip_path must already exist. Returns the server
+        response, e.g. {"book_id", "chapter_id", "page_count"}."""
+        path = Path(zip_path)
+        if not path.exists():
+            raise RuntimeError(f"File not found: {zip_path}")
+        with open(path, "rb") as fh:
+            magic = fh.read(4)
+        if not (magic[:2] == b"PK" and magic[2:4] in (b"\x03\x04", b"\x05\x06", b"\x07\x08")):
+            raise ValueError(f"Not a zip archive: {zip_path}")
+        ctype = mimetypes.guess_type(path.name)[0] or "application/zip"
+        with open(path, "rb") as fh:
+            return self._http.post("/api/volume/upload/chapter",
+                                   data={"book_id": book_id, "chapter_id": chapter_id},
+                                   files={"file": (path.name, fh, ctype)})
 
     def list_tags(self) -> dict:
         """All tags in use across books."""
