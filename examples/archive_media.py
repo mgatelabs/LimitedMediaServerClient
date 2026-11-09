@@ -12,7 +12,7 @@ def archive_media():
 
     while queue:
         folder_id = queue.popleft()
-        result = client.media.list_media(folder_id=folder_id, limit=200)
+        result = client.media.list_media(folder_id=folder_id, limit=1000, rating_limit=200)
 
         folder_name = result.get("info", {}).get("name", folder_id or "root")
 
