@@ -5,6 +5,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [0.1.4] - 2026-11-22
+
 ### Added
 - `client.books.update_status(book_id, active)` — activates or deactivates a book (`active: true/false`)
 - Client-side input validation for book updates:
