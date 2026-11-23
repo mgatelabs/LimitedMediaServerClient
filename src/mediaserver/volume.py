@@ -15,7 +15,8 @@ class VolumeClient:
     def list_books(self, offset: int = 0, limit: int = 100, rating_limit: int = 0,
                    filter_text: str = "", filter_tags: str = "", sorting: str = "AZ",
                    filter_type: str = "") -> dict:
-        """Returns: {"books": [...], "paging": {"total": int, "offset": int}}"""
+        """List books with optional text/tag filtering, sorting and paging.
+        Returns: {"books": [...], "paging": {"total": int, "offset": int}}"""
         body = self._http.post("/api/volume/list/books", data={
             "offset":      str(offset),
             "limit":       str(limit),
@@ -110,6 +111,8 @@ class VolumeClient:
                     extra_url: str, start_chapter: str, skip: str, style: str,
                     processor: str) -> dict:
         """Fetch-then-post update of all editable fields at once."""
+        rating = _validate_rating(rating)
+        style = _validate_style(style)
         return self._apply_update(self.get_book(book_id), {
             "name":          name,
             "alt_name":      alt_name,
@@ -126,19 +129,28 @@ class VolumeClient:
         })
 
     def update_title(self, book_id: str, name: str) -> dict:
+        """Rename the book."""
         return self._apply_update(self.get_book(book_id), {"name": name})
 
     def update_alt_name(self, book_id: str, alt_name: str) -> dict:
+        """Set the book's alternate name."""
         return self._apply_update(self.get_book(book_id), {"alt_name": alt_name})
 
     def update_tags(self, book_id: str, tags: list[str]) -> dict:
+        """Replace the book's full tag list."""
         return self._apply_update(self.get_book(book_id), {"tags": tags})
 
     def update_rating(self, book_id: str, rating: int) -> dict:
-        return self._apply_update(self.get_book(book_id), {"rating": rating})
+        """Set the book's rating (must be one of ALLOWED_RATINGS)."""
+        return self._apply_update(self.get_book(book_id), {"rating": _validate_rating(rating)})
 
     def update_style(self, book_id: str, style: str) -> dict:
-        return self._apply_update(self.get_book(book_id), {"style": style})
+        """Set the book's display style (must be 'page' or 'scroll')."""
+        return self._apply_update(self.get_book(book_id), {"style": _validate_style(style)})
+
+    def update_status(self, book_id: str, active: bool) -> dict:
+        """Activate or deactivate the book (active: true/false)."""
+        return self._apply_update(self.get_book(book_id), {"active": active})
 
     # ── internal ──────────────────────────────────────────────────────────────
 
@@ -169,3 +181,25 @@ class VolumeClient:
             else:
                 data[key] = value
         return self._http.post("/api/volume/update", data=data)
+
+
+# ── validation ─────────────────────────────────────────────────────────────────
+
+ALLOWED_STYLES = ("page", "scroll")
+ALLOWED_RATINGS = (0, 40, 60, 80, 90, 100, 200)
+
+
+def _validate_rating(rating: int) -> int:
+    """Rating must be one of ALLOWED_RATINGS."""
+    if not isinstance(rating, int) or isinstance(rating, bool):
+        raise ValueError(f"rating must be an integer, got {rating!r}")
+    if rating not in ALLOWED_RATINGS:
+        raise ValueError(f"rating must be one of {ALLOWED_RATINGS}, got {rating}")
+    return rating
+
+
+def _validate_style(style: str) -> str:
+    """Style must be one of ALLOWED_STYLES."""
+    if not isinstance(style, str) or style not in ALLOWED_STYLES:
+        raise ValueError(f"style must be one of {ALLOWED_STYLES}, got {style!r}")
+    return style

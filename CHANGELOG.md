@@ -5,6 +5,15 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+- `client.books.update_status(book_id, active)` — activates or deactivates a book (`active: true/false`)
+- Client-side input validation for book updates:
+  - `update_rating` (and the `rating` field of `update_book`) now only accepts one of `ALLOWED_RATINGS` (0, 40, 60, 80, 90, 100, 200); other values raise `ValueError` before any server call
+  - `update_style` (and the `style` field of `update_book`) now only accepts `"page"` or `"scroll"` (see `ALLOWED_STYLES`); other values raise `ValueError` before any server call
+
+### Changed
+- Added docstrings to the single-field book update methods
+
 ## [0.1.3] - 2026-10-06
 
 ### Added
